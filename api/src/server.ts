@@ -3,6 +3,8 @@ import { PDFDocument } from "pdf-lib";
 import { Document } from "@langchain/core/documents";
 import { writeFile, unlink } from "fs/promises";
 import { UnstructuredLoader } from "langchain/document_loaders/fs/unstructured";
+import { formatDocumentsAsString } from "langchain/util/document";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 
 async function deletePages(pdf: Buffer, pdfsToDelete: number[]) {
   const pdfDoc = await PDFDocument.load(pdf);
@@ -28,19 +30,30 @@ async function convertPdfToDocuments(pdf: Buffer): Promise<Array<Document>> {
   if (!process.env.UNSTRUCTURED_API_KEY) {
     throw new Error("UNSTRUCTURED_API_KEY is not set");
   }
-  console.log("convertPdfToDocuments", process.env.UNSTRUCTURED_API_KEY);
+
   const randomName = Math.random().toString(36).substring(7);
   await writeFile(`pdf/${randomName}.pdf`, pdf, "binary");
-
+  console.log("convertPdfToDocuments", process.env.UNSTRUCTURED_API_KEY);
   const loader = new UnstructuredLoader(`pdf/${randomName}.pdf`, {
-    apiKey: "fdSxcygYzih2ZHfdUrqaW13GR8kaAA",
+    apiKey: process.env.UNSTRUCTURED_API_KEY,
     strategy: "hi_res",
   });
-
+  console.log("loader");
   const documents = await loader.load();
   await unlink(`pdf/${randomName}.pdf`);
   return documents;
 }
+
+const generateNotes = (documents: Array<Document>) => {
+  const documnetsAsString = formatDocumentsAsString(documents);
+  const model = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    temperature: 0,
+  });
+  const modelWithTool = model.bind({
+    tools: [],
+  });
+};
 
 async function main({
   pdfUrl,
