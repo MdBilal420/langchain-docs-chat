@@ -5,6 +5,7 @@ import { writeFile, unlink } from "fs/promises";
 import { UnstructuredLoader } from "langchain/document_loaders/fs/unstructured";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { ChatOpenAI } from "langchain/chat_models/openai";
+import { NOTE_PROMPT, NOTES_TOOL_SCHEMA, outputParser } from "prompts.js";
 
 async function deletePages(pdf: Buffer, pdfsToDelete: number[]) {
   const pdfDoc = await PDFDocument.load(pdf);
@@ -44,15 +45,20 @@ async function convertPdfToDocuments(pdf: Buffer): Promise<Array<Document>> {
   return documents;
 }
 
-const generateNotes = (documents: Array<Document>) => {
+const generateNotes = async (documents: Array<Document>) => {
   const documnetsAsString = formatDocumentsAsString(documents);
   const model = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
     temperature: 0,
   });
   const modelWithTool = model.bind({
-    tools: [],
+    tools: [NOTES_TOOL_SCHEMA],
   });
+  const chain = NOTE_PROMPT.pipe(modelWithTool).pipe(outputParser);
+  const response = await chain.invoke({
+    paper: documnetsAsString,
+  });
+  return response;
 };
 
 async function main({
@@ -75,8 +81,10 @@ async function main({
   }
 
   const documents = await convertPdfToDocuments(pdfBuffer);
+  const notes = await generateNotes(documents);
   console.log(documents);
   console.log("LENGTH:", documents.length);
+  console.log("NOTES", notes);
 }
 
 main({
