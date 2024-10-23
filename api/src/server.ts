@@ -6,6 +6,7 @@ import { UnstructuredLoader } from "langchain/document_loaders/fs/unstructured";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { NOTE_PROMPT, NOTES_TOOL_SCHEMA, outputParser } from "prompts.js";
+import { addPaper, createSupabaseDatabase } from "database.js";
 
 async function deletePages(pdf: Buffer, pdfsToDelete: number[]) {
   const pdfDoc = await PDFDocument.load(pdf);
@@ -83,9 +84,23 @@ async function main({
 
   const documents = await convertPdfToDocuments(pdfBuffer);
   const notes = await generateNotes(documents);
-  console.log(documents);
+  // console.log(documents);
   console.log("LENGTH:", documents.length);
-  console.log("NOTES", notes);
+  // console.log("NOTES", notes);
+  const { client } = await createSupabaseDatabase(documents);
+console.log("NOW CALL ADD")
+  // Call the addPaper function
+  await addPaper({
+    client,
+    paper: formatDocumentsAsString(documents), // Convert to base64 or adjust as necessary
+    url: pdfUrl,
+    notes,
+    name,
+  });
+
+  // Call the addPaper function
+
+  console.log("SUCCESS")
 }
 
 main({
