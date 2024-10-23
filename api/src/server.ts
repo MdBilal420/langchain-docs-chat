@@ -70,6 +70,7 @@ async function main({
   name: string;
   pdfsToDelete?: number[];
 }) {
+  console.log("name",name)
   if (!pdfUrl.endsWith("pdf")) {
     throw new Error("Document is not  a PDF.");
   }
