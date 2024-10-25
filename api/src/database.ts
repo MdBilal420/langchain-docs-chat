@@ -18,12 +18,8 @@ export const createSupabaseDatabase = async (documents: Document[]): Promise<{
   if (!privateKey || !supabaseUrl) {
     throw new Error("Missing Supabase Key or Url");
   }
-  console.log("KEYS",privateKey,supabaseUrl)
 
   const client = createClient<Database>(supabaseUrl, privateKey);
-
-  console.log("CLIENT")
-
 
   const vectorStore = await SupabaseVectorStore.fromDocuments(
     documents,
@@ -34,9 +30,6 @@ export const createSupabaseDatabase = async (documents: Document[]): Promise<{
       queryName: 'match_documents',
     }
   );
-
-  console.log("VECTORSTORE")
-
 
   return { client, vectorStore };
 };
@@ -54,8 +47,8 @@ export const addPaper = async ({
     url: string;
     notes: Array<any>;
     name: string;
-  }): Promise<void> => {
-    console.log("INside")
+  }): Promise<any> => {
+
     const { data,error } = await client.from(PDF_PAPERS_TABLE).insert([
       {
         paper,
@@ -68,5 +61,5 @@ export const addPaper = async ({
     if (error) {
       throw new Error("Error adding paper to database: " + JSON.stringify(error, null, 2));
     }
-    console.log("Data",data)
+    return data
   };
