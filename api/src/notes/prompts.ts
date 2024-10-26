@@ -57,14 +57,14 @@ Take a deep breath, and work your way through the paper step by step.`,
   ["human", "Paper: {paper}"],
 ]);
 
-export type ArxivPaperNote = {
+export type PdfPaperNote = {
   note: string;
   pageNumbers: number[];
 };
 
 export const outputParser = (
   output: BaseMessageChunk
-): Array<ArxivPaperNote> => {
+): Array<PdfPaperNote> => {
   const toolCalls = output.additional_kwargs.tool_calls;
   if (!toolCalls) {
     throw new Error("Missing 'tool_calls' in notes output");

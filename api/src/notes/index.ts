@@ -6,7 +6,7 @@ import { UnstructuredLoader } from "langchain/document_loaders/fs/unstructured";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { NOTE_PROMPT, NOTES_TOOL_SCHEMA, outputParser } from "./prompts.js";
-import { addPaper, createSupabaseDatabase } from "../database.js";
+import { addPaper,  fromDocuments, fromExistingIndex, } from "../database.js";
 
 async function deletePages(pdf: Buffer, pdfsToDelete: number[]) {
   const pdfDoc = await PDFDocument.load(pdf);
@@ -67,6 +67,7 @@ export async function takeNotes(
   pdfsToDelete?: number[]
 ) {
 
+  const { client,vectorStore } = await fromExistingIndex();
   if (!pdfUrl.endsWith("pdf")) {
     throw new Error("Document is not  a PDF.");
   }
@@ -79,21 +80,72 @@ export async function takeNotes(
 
   const documents = await convertPdfToDocuments(pdfBuffer);
   const notes = await generateNotes(documents);
-  const { client,vectorStore } = await createSupabaseDatabase(documents);
+  
+  const newDocs:Array<Document> = documents.map((doc)=>({
+    ...doc,
+    metadata:{
+        ...doc.metadata,
+        url:pdfUrl
+    }
+  }))
 
   await Promise.all([
     addPaper({
       client,
-      paper: formatDocumentsAsString(documents), // Convert to base64 or adjust as necessary
+      paper: formatDocumentsAsString(newDocs), 
       url: pdfUrl,
       notes,
       name,
     }),
-    vectorStore.addDocuments(documents)
+    vectorStore.addDocuments(newDocs)
   ])
   
   return notes
 }
+
+
+// export async function takeNotes(
+//     pdfUrl: string,
+//    name: string,
+//    pdfsToDelete?: number[]
+//  ) {
+ 
+//    if (!pdfUrl.endsWith("pdf")) {
+//      throw new Error("Document is not  a PDF.");
+//    }
+ 
+//    let pdfBuffer = await loadPdfFromUrl(pdfUrl);
+ 
+//    if (pdfsToDelete && pdfsToDelete.length > 0) {
+//      pdfBuffer = await deletePages(pdfBuffer, pdfsToDelete);
+//    }
+ 
+//    const documents = await convertPdfToDocuments(pdfBuffer);
+//    const notes = await generateNotes(documents);
+//    const { client,vectorStore } = await fromDocuments(documents);
+
+//    const newDocs:Array<Document> = documents.map((doc)=>({
+//     ...doc,
+//     metadata:{
+//         ...doc.metadata,
+//         url:pdfUrl
+//     }
+//    }))
+ 
+//    await Promise.all([
+//      addPaper({
+//        client,
+//        paper: formatDocumentsAsString(newDocs), // Convert to base64 or adjust as necessary
+//        url: pdfUrl,
+//        notes,
+//        name,
+//      }),
+//      vectorStore.addDocuments(newDocs)
+//    ])
+   
+//    return notes
+//  }
+
 
 // main({
 //   pdfUrl: "https://cds.cern.ch/record/383367/files/p165.pdf",

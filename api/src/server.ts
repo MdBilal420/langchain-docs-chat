@@ -1,5 +1,6 @@
 import express from "express"
 import { takeNotes } from "./notes/index.js";
+import { qaOnPdf } from "qa/index.js";
 
 
 function main(){
@@ -14,15 +15,19 @@ function main(){
   })
 
   app.post('/take_notes',async (req,res) => {
-    console.log("REQ",req,"Body",req.body)
-    if(!req.body){
-      res.status(200).send("Invalid Body")
-    return;
-    }
     const { pdfUrl,name,pdfsToDelete} = req.body
 
     const notes = await takeNotes(pdfUrl,name,pdfsToDelete)
     res.status(200).send(notes)
+    return;
+
+  })  
+
+  app.post('/qa',async (req,res) => {
+    const { pdfUrl,question} = req.body
+
+    const qa = await qaOnPdf(question,pdfUrl)
+    res.status(200).send(qa)
     return;
 
   })  
