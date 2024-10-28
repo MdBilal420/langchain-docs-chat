@@ -14,6 +14,9 @@ import {
   FormDescription,
   FormMessage,
 } from "@/components/ui/form";
+import { Skeleton } from "@/components/ui/skeleton"
+
+import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { ChevronsUpDown } from "lucide-react";
@@ -44,6 +47,8 @@ type SubmittedPaperData = {
 };
 
 export default function Home() {
+
+  const [loading,setLoading] = useState<boolean>(false)
   const [submittedPaperData, setSubmittedPaperData] = useState<
     SubmittedPaperData | undefined
   >();
@@ -57,6 +62,7 @@ export default function Home() {
   });
 
   async function onPaperSubmit(values: z.infer<typeof submitPaperFormSchema>) {
+    setLoading(true)
     setSubmittedPaperData({
       ...values,
       pagesToDelete: values.pagesToDelete
@@ -74,7 +80,9 @@ export default function Home() {
     });
     if (response) {
       setNotes(response);
+      setLoading(false)
     } else {
+      setLoading(false)
       throw new Error("Something went wrong taking notes");
     }
   }
@@ -83,6 +91,7 @@ export default function Home() {
     if (!submittedPaperData) {
       throw new Error("No paper submitted");
     }
+    setLoading(true)
     const data = {
       ...values,
       pdfUrl: submittedPaperData.pdfUrl,
@@ -98,7 +107,9 @@ export default function Home() {
     });
     if (response) {
       setAnswers(response);
+      setLoading(false)
     } else {
+      setLoading(false)
       throw new Error("Something went wrong taking notes");
     }
   }
@@ -207,6 +218,16 @@ export default function Home() {
           </Form>
         </div>
       </div>
+      {loading ? 
+        <div  className="flex flex-row gap-5 mx-auto mt-3">
+     
+      <div className="space-y-2">
+        <Skeleton className="h-[125px] w-[650px] rounded-xl" />
+        <Skeleton className="h-[125px] w-[650px] rounded-xl" />
+        <Skeleton className="h-[125px] w-[650px] rounded-xl" />
+      </div>
+    
+      </div>:
       <div className="flex flex-row gap-5 mx-auto mt-3">
         {notes && notes.length > 0 && (
           <div className="flex flex-col gap-2 max-w-[600px]">
@@ -247,7 +268,7 @@ export default function Home() {
             </div>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }
