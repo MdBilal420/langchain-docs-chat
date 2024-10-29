@@ -31,5 +31,5 @@ export default async function handler(
 }
 
 export const config = {
-  runtime: 'edge',
+  maxDuration: 900,  // 15 minutes in seconds
 };

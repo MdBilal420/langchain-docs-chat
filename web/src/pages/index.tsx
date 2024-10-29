@@ -65,7 +65,7 @@ export default function Home() {
     setLoading(true)
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 29000); // Just under Edge function limit
+      const timeoutId = setTimeout(() => controller.abort(), 890000); // Just under function limit
 
       const response = await fetch("/api/take_notes", {
         method: "POST",
