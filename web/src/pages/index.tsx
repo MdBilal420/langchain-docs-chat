@@ -63,27 +63,35 @@ export default function Home() {
 
   async function onPaperSubmit(values: z.infer<typeof submitPaperFormSchema>) {
     setLoading(true)
-    setSubmittedPaperData({
-      ...values,
-      pagesToDelete: values.pagesToDelete
-        ? processPagesToDelete(values.pagesToDelete)
-        : undefined,
-    });
-    const response = await fetch("/api/take_notes", {
-      method: "POST",
-      body: JSON.stringify(values),
-    }).then((res) => {
-      if (res.ok) {
-        return res.json();
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 890000); // Just under function limit
+
+      const response = await fetch("/api/take_notes", {
+        method: "POST",
+        body: JSON.stringify(values),
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        if (response.status === 504) {
+          throw new Error('Request timeout - PDF might be too large or complex');
+        }
+        throw new Error(`Error: ${response.status}`);
       }
-      return null;
-    });
-    if (response) {
-      setNotes(response);
+      
+      const data = await response.json();
+      setNotes(data);
+    } catch (error) {
+      console.error('Error:', error);
+      alert(error instanceof Error ? error.message : 'An error occurred while processing the PDF');
+    } finally {
       setLoading(false)
-    } else {
-      setLoading(false)
-      throw new Error("Something went wrong taking notes");
     }
   }
 

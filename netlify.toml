@@ -1,0 +1,9 @@
+[functions]
+  # Increase timeout to 15 minutes (900 seconds)
+  timeout = "900"
+  # Increase payload size limit if needed
+  included_files = ["node_modules/**"]
+
+[build]
+  command = "npm run build"
+  publish = ".next" 

@@ -29,3 +29,7 @@ export default async function handler(
   }
   return res.status(400);
 }
+
+export const config = {
+  maxDuration: 900,  // 15 minutes in seconds
+};
