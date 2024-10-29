@@ -9,7 +9,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Array<QAResponse> | undefined>
 ) {
-  const API_URL = "http://localhost:8000/qa";
+//  const API_URL = "http://localhost:8000/qa";
+  const API_URL = "https://langchain-docs-chat.onrender.com/qa";
+
   const data = await fetch(API_URL, {
     method: "POST",
     headers: {
